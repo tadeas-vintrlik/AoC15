@@ -1,3 +1,5 @@
+(load "../common/common.lisp")
+
 (defun parse-box-sizes (string)
   "Return list of length 3 with dimensions of the box."
   (let*
@@ -36,12 +38,6 @@
      (* 2 (nth 1 sorted))
      (* (car sorted) (nth 1 sorted) (nth 2 sorted)))))
 
-(defun collect-input ()
-   (loop
-     for line = (read-line *standard-input* nil 'eof)
-     until (eq line 'eof)
-     collect (parse-box-sizes line)))
-
 (defun part1 (input)
   (format t "Part 1 result: ~a~%"
           (reduce #'+ (mapcar #'compute-box-area input))))
@@ -52,9 +48,8 @@
 
 (defun main()
   (let
-      ((input (collect-input)))
+      ((input (collect-input "input" #'parse-box-sizes)))
     (part1 input)
     (part2 input)))
 
-;; Compile the code
-(sb-ext:save-lisp-and-die "day2" :toplevel #'main :executable t)
+(main)

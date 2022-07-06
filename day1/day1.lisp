@@ -1,11 +1,13 @@
-;; Returns value of character
+(load "../common/common.lisp")
+
 (defun char-val (c)
+  "Returns numeric value of character."
   (if (string= c ")")
       -1
       1))
 
 (defun part-1 (input)
-  (format t "Part 1 result: ~d~%" 
+  (format t "Part 1 result: ~d~%"
           (reduce #'+ input)))
 
 (defun part-2-help (input floor position)
@@ -18,9 +20,8 @@
 
 (defun main ()
   (let
-      ((input (mapcar 'char-val (loop :for c :across (read-line) :collect c))))
+      ((input (car (collect-input "input" #'(lambda (str) (loop for c across str collect (char-val c)))))))
     (part-1 input)
     (part-2 input)))
 
-;; Compile the code
-(sb-ext:save-lisp-and-die "day1" :toplevel #'main :executable t)
+(main)
