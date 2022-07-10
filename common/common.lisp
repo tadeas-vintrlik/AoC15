@@ -7,3 +7,40 @@
       collect (if clb
                   (funcall clb line)
                   line))))
+
+;;; Unit Testing Framework
+;;; Taken from chapter 9 of Practical Common Lisp
+;;; Slightly modified to show the value returned and expected
+(defvar *test-name* nil)
+
+(defmacro deftest (name parameters &body body)
+  "Define a test function. Within a test function we can call
+   other test functions or use 'check' to run individual test
+   cases."
+  `(defun ,name ,parameters
+     (let ((*test-name* (append *test-name* (list ',name))))
+       ,@body)))
+
+(defmacro check (&body forms)
+  "Expects lists of two where one is the expected value and other is the expression to test."
+  `(combine-results
+     ,@(loop for f in forms collect
+             `(let
+                  ((expected (first ',f))
+                   (got-expr (second ',f))
+                   (got-val (eval (second ',f))))
+                (report-result got-expr expected got-val)))))
+
+(defmacro combine-results (&body forms)
+  "Combine the results (as booleans) of evaluating 'forms' in order."
+  (with-gensyms (result)
+    `(let ((,result t))
+       ,@(loop for f in forms collect `(unless ,f (setf ,result nil)))
+       ,result)))
+
+(defun report-result (form expected got)
+  "Report the results of a single test case. Called by 'check'."
+  (let ((result (eql expected got)))
+    (format t "~:[FAIL~;pass~] ... ~a: ~a ~:[(expected: ~a got: ~a)~;~]~%" result *test-name* form result expected got)
+    result))
+
