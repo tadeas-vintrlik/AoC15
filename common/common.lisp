@@ -13,6 +13,11 @@
 ;;; Slightly modified to show the value returned and expected
 (defvar *test-name* nil)
 
+(defmacro with-gensyms ((&rest names) &body body)
+  "Macro building macro for generating symbols for list of names."
+  `(let ,(loop for n in names collect `(,n (gensym)))
+     ,@body))
+
 (defmacro deftest (name parameters &body body)
   "Define a test function. Within a test function we can call
    other test functions or use 'check' to run individual test
