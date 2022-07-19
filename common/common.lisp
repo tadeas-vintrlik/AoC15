@@ -8,6 +8,16 @@
                   (funcall clb line)
                   line))))
 
+(defun split-string (string delim)
+  "Return a list of string split by delimiter."
+  (let
+      ((end (position delim string)))
+    (if (not end)
+        (list string)
+        (append
+         (list (subseq string 0 end))
+         (split-string (subseq string (1+ end)) delim)))))
+
 ;;; Unit Testing Framework
 ;;; Taken from chapter 9 of Practical Common Lisp
 ;;; Slightly modified to show the value returned and expected
@@ -31,7 +41,7 @@
   `(combine-results
      ,@(loop for f in forms collect
              `(let
-                  ((expected (first ',f))
+                  ((expected (eval (first ',f)))
                    (got-expr (second ',f))
                    (got-val (eval (second ',f))))
                 (report-result got-expr expected got-val)))))
@@ -45,7 +55,13 @@
 
 (defun report-result (form expected got)
   "Report the results of a single test case. Called by 'check'."
-  (let ((result (eql expected got)))
+  (let ((result (equal expected got)))
     (format t "~:[FAIL~;pass~] ... ~a: ~a ~:[(expected: ~a got: ~a)~;~]~%" result *test-name* form result expected got)
     result))
 
+(deftest split-string-test ()
+  (check
+    ('("hello" "world") (split-string "hello world" #\ ))
+    ('("hello" "world") (split-string "helloxworld" #\x))
+    ('("helloxworld") (split-string "helloxworld" #\ ))
+    ('("hello" "world" "") (split-string "hello world " #\ ))))
