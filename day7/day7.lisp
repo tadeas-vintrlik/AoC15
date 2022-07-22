@@ -75,11 +75,24 @@
         ((and (string= (car i) "->") (parse-integer (nth 2 i) :junk-allowed t))
          (setf (gethash (nth 1 i) ht) (parse-integer (nth 2 i))))
         (t (setf (gethash (nth 1 i) ht) i))))
-    (format t "Part 1 result: ~a~%" (get-wire-value "a" ht))))
+    (format t "Part 1 result: ~a~%" (get-wire-value "a" ht))
+    (get-wire-value "a" ht)))
+
+(defun part-2 (part-1-res input)
+  (let
+      ((ht (make-hash-table :test 'equal)))
+    (dolist (i input)
+      (cond
+        ((and (string= (car i) "->") (parse-integer (nth 2 i) :junk-allowed t))
+         (setf (gethash (nth 1 i) ht) (parse-integer (nth 2 i))))
+        (t (setf (gethash (nth 1 i) ht) i))))
+    (setf (gethash "b" ht) part-1-res)
+    (format t "Part 2 result: ~a~%" (get-wire-value "a" ht)))
+)
 
 (defun main ()
   (let
       ((input (collect-input "input" #'parse-instruction)))
-    (part-1 input)))
+    (part-2 (part-1 input) input)))
 
 (main)
