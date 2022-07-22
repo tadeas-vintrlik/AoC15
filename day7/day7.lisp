@@ -26,57 +26,60 @@
   (infix-instruction
    (split-string line #\ )))
 
+(defun get-arg-value (arg ht)
+  (cond
+    ((parse-integer arg :junk-allowed t) (parse-integer arg))
+    (t (get-wire-value arg ht))))
+
 (defun +->+ (ht dest val)
-  (setf (gethash dest ht) (parse-integer val))
-  )
+  (setf (gethash dest ht) (get-arg-value val ht)))
 
 (defun +AND+ (ht dest arg1 arg2)
   (setf (gethash dest ht)
-        (mod
-         (logand (gethash arg1 ht) (gethash arg2 ht))
-         +MAX+)))
+         (logand (get-arg-value arg1 ht) (get-arg-value arg2 ht))))
 
 (defun +OR+ (ht dest arg1 arg2)
   (setf (gethash dest ht)
-        (mod
-         (logior (gethash arg1 ht) (gethash arg2 ht))
-         +MAX+)))
+         (logior (get-arg-value arg1 ht) (get-arg-value arg2 ht))))
 
 (defun +NOT+ (ht dest arg1)
   (setf (gethash dest ht)
-        (mod
-         (1+ (lognot (gethash arg1 ht)))
-         +MAX+)))
+         (1+ (mod (lognot (get-arg-value arg1 ht)) +MAX+))))
 
 (defun +LSHIFT+ (ht dest arg1 arg2)
   (setf (gethash dest ht)
-        (mod
-         (ash (gethash arg1 ht) (parse-integer arg2))
-         +MAX+)))
+         (ash (get-arg-value arg1 ht) (get-arg-value arg2 ht))))
 
 (defun +RSHIFT+ (ht dest arg1 arg2)
   (setf (gethash dest ht)
-        (mod
-         (ash (gethash arg1 ht) (- 0 (parse-integer arg2)))
-         +MAX+)))
+         (ash (get-arg-value arg1 ht) (- 0 (get-arg-value arg2 ht)))))
 
-(defun eval-instruction (instruction ht)
-  (let
-      ((dest (nth 1 instruction))
-       (to-eval (cons (intern (format nil "+~a+" (car instruction))) (cons ht (cdr instruction)))))
-    (eval to-eval)))
+(defun get-wire-value (name ht)
+
+  (cond
+    ;; If already a value in the hash table return it
+    ((and (gethash name ht) (numberp (gethash name ht))) (gethash name ht))
+    ;; Otherwise it needs to be computed
+    (t (let*
+        ((instruction (gethash name ht))
+         (to-eval (cons
+                  (intern (format nil "+~a+" (car instruction)))
+                  (cons ht (cdr instruction)))))
+        (eval to-eval)))))
 
 (defun part-1 (input)
   (let
       ((ht (make-hash-table :test 'equal)))
     (dolist (i input)
-      (eval-instruction i ht))
-    (format t "Part 1 result: ~a~%" (gethash "a" ht))))
+      (cond
+        ((and (string= (car i) "->") (parse-integer (nth 2 i) :junk-allowed t))
+         (setf (gethash (nth 1 i) ht) (parse-integer (nth 2 i))))
+        (t (setf (gethash (nth 1 i) ht) i))))
+    (format t "Part 1 result: ~a~%" (get-wire-value "a" ht))))
 
 (defun main ()
   (let
       ((input (collect-input "input" #'parse-instruction)))
-    (format t "~a~%" input)
     (part-1 input)))
 
 (main)
